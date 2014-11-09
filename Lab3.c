@@ -23,7 +23,7 @@ _CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_ON & COE_OFF & ICS_PGx1 &
 	// Configuration bits for CONFIG2 settings.
 	// Make sure "Configuration Bits set in code." option is checked in MPLAB.
 
-	_CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OSCIOFNC_OFF &
+_CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OSCIOFNC_OFF &
 	IOL1WAY_OFF & I2C1SEL_PRI & POSCMOD_XT)
 
 	// ******************************************************************************************* //
@@ -40,6 +40,13 @@ _CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_ON & COE_OFF & ICS_PGx1 &
 
 volatile int state = 0;
 volatile double POT_POS = 0.0;
+
+//	preliminary final project code
+volatile double leftPT_val = 0.0;
+volatile double rightPT_val = 0.0;
+volatile int barcode[10] = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+volatile unsigned int barcode_counter = 0;
+volatile int barcode_flag = 0;
 
 int main(void) {
 	char value[8];
@@ -72,19 +79,6 @@ int main(void) {
 	LCDInitialize();
 	PWM_init(POT_POS);
 
-	/***************************************
-	
-	TODO: Analog to digital conversions will go in here to find out the position of the
-	potentiometer.  This position will be used to set the duty cycle for the motion of
-	the motors in the Pulse Width Modulation (PWM).
-	
-	***************************************/
-
-	// will arbitrarily define the result of the ADC as the double pot_pos (see above)
-	
-	// we have a 10-bit ADC, so the values from the approximation range from 0-1023 [2^10-1]
-	// this means that our middle value is 511.5
-
 	while (1) {
 
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
@@ -94,6 +88,13 @@ int main(void) {
 		LCDPrintString(value);
 
 		PWM_Update(POT_POS);
+
+		// preliminary final project code
+		// FIXME:	we will need to set-up the ADC to convert the transistor values from  
+		//			analog to digital.  For now, I will arbitrarily name the two values I
+		//			I will be using as leftPT_val and rightPT_val.  These represent the 
+		//			already converted values.
+		if (barcode_flag = 1)  barCode_Scan(leftPT_val, rightPT_val, barcode, barcode_counter);
 
 		switch (state) {
 
@@ -132,6 +133,12 @@ void __attribute__((interrupt)) _CNInterrupt(void) { // for SW1 RB5
 
 	IFS1bits.CNIF = 0;
 //	LATBbits.LATB15 = 1;
+
+// preliminary final project code
+// FIXME:	must define pins to be used for the IR transistor inputs (maybe use same pin for both?).
+//			If change is detected on pin, then we will change a defined flag to high to begin the check
+//			for a new barcode.
+	barcode_flag = 1;
 
 	if (PORTBbits.RB5 == 1) {   // press
 	

@@ -8,6 +8,21 @@
 #define PWM_FREQ 10000					// setting frequency to 10 kHz
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
 
+// preliminary final project code
+// FIXME:	If I understand correctly, the voltage of the transistor will be lower with less light
+//			reflected, so black will absorb the most light and have the least voltage.  The white 
+//			tape and tile will both be on the upper end of the reflectivity scale (tile is glossy,
+//			mostly white; tape is white), and will thus have higher ADC values.  The red tape of the
+//			barcode will be somewhere in the middle.
+#define lower_tile_val 900		// since tile is the most reflective, it will have the highest value
+#define upper_white_val 899		// white tape will be 2nd only to the tile; white, non-reflective
+#define lower_white_val 600
+#define upper_red_val   599		// red range will begin just below the white
+#define lower_red_val   150
+#define upper_black_val 149		// black tape will reflect little, and will only be at the low end
+
+
+/***********************************************************************************************/
 
 void PWM_init(double pot_position) {
 
@@ -47,6 +62,8 @@ void PWM_init(double pot_position) {
 
 	return;
 }
+
+/***********************************************************************************************/
 
 void PWM_Update(double pot_position) {
 
@@ -90,8 +107,106 @@ void PWM_Update(double pot_position) {
 	return;
 }
 
+/***********************************************************************************************/
+
+void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int *code_counter) {
+	
+	char left = '\0';
+	char right = '\0';
+	int i = 0;
+
+	switch (barcode[0]) {
+
+		// "case 2" is the polling state, checking if a barcode is being detected or not
+		case 2:
+
+			// We only have to check for the black bar in the initial case because this is the only
+			// start scenario for reading a barcode.
+			if (left_val <= upper_black_val) {	// if start bit detected
+				barcode[0] = -1;
+				*code_counter = 1;					// increment counter to indicate start
+				left = 'Y';
+				right = 'N';
+
+				LCDClear();
+				LCDMoveCursor(0,0);
+				LCDPrintChar('L');
+				LCDPrintChar(':');
+			}
+			else if (right_val <= upper_black_val) {	// if start bit detected
+				barcode[0] = -1;
+				*code_counter = 1;					// increment counter to indicate start
+				left = 'N';
+				right = 'Y';
+
+				LCDClear();
+				LCDMoveCursor(0,0);
+				LCDPrintChar('R');
+				LCDPrintChar(':');
+			}
 
 
+		// if the first element is not 2, then a barcode "start" bit has already been detected
+		default:
+			
+			// We now have to consider all scenarios. At this point, we will only enter this state if
+			// the start bit has been detected and a change in the transistor has been registered.
+			// A change is likely to occur since any small change will be registered, so we will also
+			// have to check the previous barcode entry, since we never have two repeated values.
+			if (left == 'Y') {
+				if (left_val <= upper_black_val) {
+					if (barcode[*code_counter] == 0)  break;
+
+					*code_counter++;
+					barcode[*code_counter] = 0;
+					LCDPrintChar(barcode[*code_counter] + '0');
+				}
+				else if (left_val >= lower_red_val && left_val <= upper_red_val) {
+					if (barcode[*code_counter] == 1)  break;
+
+					*code_counter++;
+					barcode[*code_counter] = 1;
+					LCDPrintChar(barcode[*code_counter] + '0');
+				}
+				else if (left_val >= lower_white_val && left_val <= upper_white_val){
+					*code_counter = *code_counter;
+				}
+				else {	// if this executes, then we have reached the end of the barcode
+					for (i = 0; i < 10; i++) {	// reset the barcode
+						barcode[i] = 2;
+					}
+					*code_counter = 0;
+				}
+			}
+			else if (right == 'Y') {
+				if (right_val <= upper_black_val) {
+					if (barcode[*code_counter] == 0)  break;
+
+					*code_counter++;
+					barcode[*code_counter] = 0;
+					LCDPrintChar(barcode[*code_counter] + '0');
+				}
+				else if (right_val >= lower_red_val && right_val <= upper_red_val) {
+					if (barcode[*code_counter] == 1)  break;
+
+					*code_counter++;
+					barcode[*code_counter] = 1;
+					LCDPrintChar(barcode[*code_counter] + '0');
+				}
+				else if (right_val >= lower_white_val && right_val <= upper_white_val){
+					*code_counter = *code_counter;
+				}
+				else {	// if this executes, then we have reached the end of the barcode
+					for (i = 0; i < 10; i++) {	// reset the barcode
+						barcode[i] = 2;
+					}
+					*code_counter = 0;
+				}
+			}
+	}
+
+	return;
+}
 
 // Nicolas Fajardo, Paul Cross, Kevin Morris
 // TEAM 202
