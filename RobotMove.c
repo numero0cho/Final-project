@@ -122,9 +122,8 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 
 			// We only have to check for the black bar in the initial case because this is the only
 			// start scenario for reading a barcode.
-			if (left_val <= upper_black_val) {	// if start bit detected
+			if (left_val <= upper_black_val) {		// if start bit detected
 				barcode[0] = -1;
-				*code_counter = 1;					// increment counter to indicate start
 				left = 'Y';
 				right = 'N';
 
@@ -135,15 +134,15 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 			}
 			else if (right_val <= upper_black_val) {	// if start bit detected
 				barcode[0] = -1;
-				*code_counter = 1;					// increment counter to indicate start
 				left = 'N';
 				right = 'Y';
 
 				LCDClear();
-				LCDMoveCursor(0,0);
+				LCDMoveCursor(1,0);
 				LCDPrintChar('R');
 				LCDPrintChar(':');
 			}
+			break;
 
 
 		// if the first element is not 2, then a barcode "start" bit has already been detected
@@ -155,24 +154,31 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 			// have to check the previous barcode entry, since we never have two repeated values.
 			if (left == 'Y') {
 				if (left_val <= upper_black_val) {
-					if (barcode[*code_counter] == 0)  break;
+					if (barcode[*code_counter] == 0 || barcode[*code_counter] == -1)  break;
 
-					*code_counter++;
 					barcode[*code_counter] = 0;
 					LCDPrintChar(barcode[*code_counter] + '0');
 				}
 				else if (left_val >= lower_red_val && left_val <= upper_red_val) {
 					if (barcode[*code_counter] == 1)  break;
 
-					*code_counter++;
 					barcode[*code_counter] = 1;
 					LCDPrintChar(barcode[*code_counter] + '0');
 				}
 				else if (left_val >= lower_white_val && left_val <= upper_white_val){
-					*code_counter = *code_counter;
+					*code_counter++;
+				}
+				else if (left_val >= lower_white_val && left_val <= upper_white_val && *code_counter == 4) {
+					for (i = 0; i < 5; i++) {	// reset the barcode
+						barcode[i] = 2;
+					}
+					*code_counter = 0;
 				}
 				else {	// if this executes, then we have reached the end of the barcode
-					for (i = 0; i < 10; i++) {	// reset the barcode
+					LCDClear();
+					LCDMoveCursor(0, 0);
+					LCDPrintString("Invalid");
+					for (i = 0; i < 5; i++) {	// reset the barcode
 						barcode[i] = 2;
 					}
 					*code_counter = 0;
@@ -180,7 +186,7 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 			}
 			else if (right == 'Y') {
 				if (right_val <= upper_black_val) {
-					if (barcode[*code_counter] == 0)  break;
+					if (barcode[*code_counter] == 0 || barcode[*code_counter] == -1)  break;
 
 					*code_counter++;
 					barcode[*code_counter] = 0;
@@ -196,13 +202,23 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 				else if (right_val >= lower_white_val && right_val <= upper_white_val){
 					*code_counter = *code_counter;
 				}
+				else if (left_val >= lower_white_val && left_val <= upper_white_val && *code_counter == 4) {
+					for (i = 0; i < 5; i++) {	// reset the barcode
+						barcode[i] = 2;
+					}
+					*code_counter = 0;
+				}
 				else {	// if this executes, then we have reached the end of the barcode
-					for (i = 0; i < 10; i++) {	// reset the barcode
+					LCDClear();
+					LCDMoveCursor(0, 0);
+					LCDPrintString("Invalid");
+					for (i = 0; i < 5; i++) {	// reset the barcode
 						barcode[i] = 2;
 					}
 					*code_counter = 0;
 				}
 			}
+			break;
 	}
 
 	return;
