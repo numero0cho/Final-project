@@ -81,28 +81,28 @@ void PWM_Update(double pot_position) {
 	}
 	else {												// else turning left or idle
 		DUTY_CYCLE_RIGHT = 1.0;							// right motor on full
-		DUTY_CYCLE_LEFT = 2 - position_ratio;			// turning left
+		DUTY_CYCLE_LEFT = 1 - position_ratio;			// turning left
 	}
 	
 	OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
-	OC1R = OC_value_right;
-	OC1RS = OC_value_right;								// set the right motor value for the next cycle
+//	OC1R = OC_value_right;
+	OC1RS = OC_value_right*0.8;								// set the right motor value for the next cycle
 	
-	if(DUTY_CYCLE_LEFT < 0.0) DUTY_CYCLE_LEFT = 0.0;
-	sprintf(value, "%3.f", DUTY_CYCLE_RIGHT*100);
-	LCDMoveCursor(1, 0);
-	LCDPrintString(value);
-	LCDPrintChar('%');
+	if(DUTY_CYCLE_RIGHT < 0.0) DUTY_CYCLE_RIGHT = 0.0;
+//	sprintf(value, "%3.f", DUTY_CYCLE_RIGHT*100);
+//	LCDMoveCursor(1, 0);
+//	LCDPrintString(value);
+//	LCDPrintChar('%');
 
 		
 	OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
-	OC2R = OC_value_left;
-	OC2RS = OC_value_left;								// set the left mtoor value for the next cycle
+//	OC2R = OC_value_left;
+	OC2RS = OC_value_left*0.8;								// set the left mtoor value for the next cycle
 	
 	if(DUTY_CYCLE_LEFT < 0.0) DUTY_CYCLE_LEFT = 0.0;
-	sprintf(value, "%3.f", DUTY_CYCLE_LEFT*100);
-	LCDPrintString(value);
-	LCDPrintChar('%');
+//	sprintf(value, "%3.f", DUTY_CYCLE_LEFT*100);
+//	LCDPrintString(value);
+//	LCDPrintChar('%');
 
 	return;
 }
