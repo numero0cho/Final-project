@@ -14,12 +14,12 @@
 //			tape and tile will both be on the upper end of the reflectivity scale (tile is glossy,
 //			mostly white; tape is white), and will thus have higher ADC values.  The red tape of the
 //			barcode will be somewhere in the middle.
-#define lower_tile_val 900		// since tile is the most reflective, it will have the highest value
+#define lower_tile_val 400		// since tile is the most reflective, it will have the highest value
 #define upper_white_val 899		// white tape will be 2nd only to the tile; white, non-reflective
 #define lower_white_val 600
 #define upper_red_val   599		// red range will begin just below the white
 #define lower_red_val   150
-#define upper_black_val 149		// black tape will reflect little, and will only be at the low end
+#define upper_black_val 200	// black tape will reflect little, and will only be at the low end
 
 
 /***********************************************************************************************/
@@ -65,6 +65,38 @@ void PWM_init(double pot_position) {
 
 /***********************************************************************************************/
 
+
+void PWM_Update(double rightADC, double leftADC, double midADC) {
+	double OC_value_right = 0.0;
+	double OC_value_left = 0.0;
+	double DUTY_CYCLE_RIGHT = 0.0;
+	double DUTY_CYCLE_LEFT = 0.0;
+	
+	if (midADC < 400) {
+		leftADC = 511.5;
+		rightADC = 511.5;
+	}
+	else if (midADC > 400 && leftADC > 400 && rightADC > 400) {
+		return;
+	}		
+//	if (leftADC > 500 && rightADC > 500 && midADC > 500) {
+		
+//	}	
+	
+	// Need to check if left is actually left or if left is right
+
+	DUTY_CYCLE_LEFT = leftADC / 511.5;
+	DUTY_CYCLE_RIGHT = rightADC / 511.5;
+
+	OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
+	OC1RS = OC_value_right*0.9;
+	
+	OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
+	OC2RS = OC_value_left*0.9;
+	
+}	
+
+/*
 void PWM_Update(double pot_position) {
 
 	double OC_value_right = 0.0;

@@ -37,7 +37,7 @@ _CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OS
 #define PWM_PERIOD (1/10000)
 #define PWM_FREQ 10000						// setting frequency to 100 Hz; MAY NEED TO BE CHANGED
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
-#define MIDDLE           300    // cut-off between tile and white
+#define MIDDLE           320    // cut-off between tile and white
 //#define MIDDLE          140    // cut-off between red and tile
 #define DARK            200    // cut-off between black and red
 
@@ -54,7 +54,6 @@ volatile unsigned int barcode_counter = 0;
 int main(void) {
 	char value[8];
 	float k = 1.0;
-
 
 	TRISBbits.TRISB8 = 0;	// setting pin to be output
 	TRISBbits.TRISB2 = 0;
@@ -101,7 +100,7 @@ int main(void) {
 		// FIXME: Must configure which input is being converted at this stage (for first one, set
 		//		AN0 to be converted; second, set AN1, etc.) [Might already be fixed?]
 		AD1CHS = 0;	// AN1 input pin is analog
-		DelayUs(200);
+		DelayUs(100);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
 		LeftSensorADC = ADC1BUF0;
 		sprintf(value, "%3.0f", LeftSensorADC);
@@ -110,7 +109,7 @@ int main(void) {
 
 		
 		AD1CHS = 1;
-		DelayUs(200);
+		DelayUs(100);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
 		MiddleSensorADC = ADC1BUF0;	
 		sprintf(value, "%3.0f", MiddleSensorADC);
@@ -119,9 +118,9 @@ int main(void) {
 
 		
 		AD1CHS = 2;
-		DelayUs(200);
+		DelayUs(100);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-		RightSensorADC = (420/21)*(ADC1BUF0-2) + 140;
+		RightSensorADC = (405/14)*(ADC1BUF0-3)+210;
 	//	RightSensorADC =ADC1BUF0;
 		sprintf(value, "%3.0f", RightSensorADC);
 		LCDMoveCursor(1,0); LCDPrintString(value);
@@ -155,10 +154,10 @@ int main(void) {
 //	            }		
 //	            else k = 1.0;
 	            
-                POT_POS = 511.5 - 1.2*(RightSensorADC) + 1.0*(LeftSensorADC);
+             //   POT_POS = 511.5 - 1.2*(RightSensorADC) + 1.0*(LeftSensorADC);
                 
-                PWM_Update(POT_POS);
-                DelayUs(150);
+                PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
+                DelayUs(200);
 
                 PathDecision1();
                 break;
@@ -234,7 +233,7 @@ int PathDecision1() {	// before the u-turn
 //         RightSensorADC   < DARK) {	//black
 //            state = 1;  }	//90 deg right turn
      if( LeftSensorADC   < DARK &&	//black
-         MiddleSensorADC  < DARK &&	//black
+         MiddleSensorADC  < MIDDLE &&	//black
          RightSensorADC   < DARK) {	//black
             state = 2; }	//U-Turn
 //      else if( LeftSensorADC   > 400 &&	//black
