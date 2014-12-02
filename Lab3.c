@@ -37,9 +37,9 @@ _CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OS
 #define PWM_PERIOD (1/10000)
 #define PWM_FREQ 10000						// setting frequency to 100 Hz; MAY NEED TO BE CHANGED
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
-#define MIDDLE           320    // cut-off between tile and white
+#define MIDDLE           500    // cut-off between tile and white
 //#define MIDDLE          140    // cut-off between red and tile
-#define DARK            200    // cut-off between black and red
+#define DARK            275    // cut-off between black and red
 
 volatile int state = -1;
 volatile double POT_POS = 513.5;
@@ -54,11 +54,14 @@ volatile unsigned int barcode_counter = 0;
 int main(void) {
 	char value[8];
 	float k = 1.0;
+	int i = 0;
 
 	TRISBbits.TRISB8 = 0;	// setting pin to be output
 	TRISBbits.TRISB2 = 0;
 	TRISBbits.TRISB3 = 0;
 	TRISBbits.TRISB10 = 0;
+	TRISBbits.TRISB9 = 0;
+	TRISBbits.TRISB11 = 0;
 
 	// FOR MOTION TRANSISTORS
 	TRISAbits.TRISA0 = 1;	// set pin 2 to be input
@@ -67,8 +70,8 @@ int main(void) {
 	TRISAbits.TRISA1 = 1;	// set pin 3 to be input
 	AD1PCFGbits.PCFG1 = 0;	// set pin 3 to be analog input
 
-	TRISBbits.TRISB0 = 1;	// set pin 4 to be input
-	AD1PCFGbits.PCFG2 = 0;	// set pin 4 to be analog input
+	TRISBbits.TRISB1 = 1;	// set pin 4 to be input
+	AD1PCFGbits.PCFG3 = 0;	// set pin 4 to be analog input
 	// END PINS FOR MOTION
 
 	TRISBbits.TRISB5 = 1;	// switch 1 is input; pin 14
@@ -100,28 +103,28 @@ int main(void) {
 		// FIXME: Must configure which input is being converted at this stage (for first one, set
 		//		AN0 to be converted; second, set AN1, etc.) [Might already be fixed?]
 		AD1CHS = 0;	// AN1 input pin is analog
-		DelayUs(100);
+		DelayUs(200);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-		LeftSensorADC = ADC1BUF0;
-		sprintf(value, "%3.0f", LeftSensorADC);
+		MiddleSensorADC = ADC1BUF0;
+		sprintf(value, "%3.0f", MiddleSensorADC);
 		LCDMoveCursor(0,0); LCDPrintString(value);
 		LCDPrintChar(' ');
 
 		
 		AD1CHS = 1;
-		DelayUs(100);
+		DelayUs(200);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-		MiddleSensorADC = ADC1BUF0;	
-		sprintf(value, "%3.0f", MiddleSensorADC);
+		LeftSensorADC = ADC1BUF0;	
+		sprintf(value, "%3.0f", LeftSensorADC);
 //		LCDMoveCursor(1,0);
 		LCDPrintString(value);
 
 		
-		AD1CHS = 2;
-		DelayUs(100);
+		AD1CHS = 3;
+		DelayUs(200);
 		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-		RightSensorADC = (405/14)*(ADC1BUF0-3)+210;
-	//	RightSensorADC =ADC1BUF0;
+//		RightSensorADC = (350/13)*(ADC1BUF0-2)+180;
+		RightSensorADC = ADC1BUF0;
 		sprintf(value, "%3.0f", RightSensorADC);
 		LCDMoveCursor(1,0); LCDPrintString(value);
 		
@@ -136,16 +139,20 @@ int main(void) {
 
 
 //		PWM_Update(POT_POS);
-
-
-
-		// preliminary final project code
-		// FIXME:	we will need to set-up the ADC to convert the transistor values from  
-		//			analog to digital.  For now, I will arbitrarily name the two values I
-		//			I will be using as leftPT_val and rightPT_val.  These represent the 
-		//			already converted values.
 	//	barCode_Scan(leftPT_val, rightPT_val, barcode, &barcode_counter);
-
+	
+	
+	
+//	    LCDClear();
+//      	sprintf(value, "%3.0f", RightSensorADC);
+//		LCDMoveCursor(1,0); LCDPrintString(value);
+//		LCDPrintChar(' ');
+//		LCDPrintChar(' ');
+//		sprintf(value, "%1d", state);
+//		LCDPrintString(value);
+//								for (i=0; i<2000; i++){ // 30 would be 3 seconds
+//        			DelayUs(200); //increments of 1/10th of a second
+//   				}  
 		switch (state) {
             case 0: // track path there
 //            	if (MiddleSensorADC < 350) { 
@@ -155,7 +162,9 @@ int main(void) {
 //	            else k = 1.0;
 	            
              //   POT_POS = 511.5 - 1.2*(RightSensorADC) + 1.0*(LeftSensorADC);
-                
+
+
+				
                 PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
                 DelayUs(200);
 
@@ -164,8 +173,10 @@ int main(void) {
             case 1: // 90 deg right turn
                 //forward
                 RPOR4bits.RP8R = 0;	// left wheel
-                RPOR1bits.RP2R = 18;
-                RPOR1bits.RP3R = 0;	// right wheel
+                RPOR4bits.RP9R = 18;
+               // RPOR1bits.RP2R = 18;
+               RPOR5bits.RP11R = 0;
+               // RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 19;
                 
                 RightCorner();
@@ -175,8 +186,10 @@ int main(void) {
                 U_Turn();
               
                 RPOR4bits.RP8R = 0;	// left wheel
-                RPOR1bits.RP2R = 18;
-                RPOR1bits.RP3R = 0;	// right wheel
+               RPOR4bits.RP9R = 18;
+               // RPOR1bits.RP2R = 18;
+                RPOR5bits.RP11R = 0;
+                //RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 19;
                 state = 0;
                 break;
@@ -187,8 +200,10 @@ int main(void) {
                 PWM_Update(POT_POS);
                 // forward
                 RPOR4bits.RP8R = 0;	// left wheel
-                RPOR1bits.RP2R = 18;
-                RPOR1bits.RP3R = 0;	// right wheel
+               RPOR4bits.RP9R = 18;
+               // RPOR1bits.RP2R = 18;
+                RPOR5bits.RP11R = 0;
+                //RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 19;
                 PathDecision2();
                 break;
@@ -199,15 +214,19 @@ int main(void) {
             case 5: // Idle and victory!
                 // idle
                 RPOR4bits.RP8R = 0;	// left wheel
-                RPOR1bits.RP2R = 0;
-                RPOR1bits.RP3R = 0;	// right wheel
+                RPOR4bits.RP9R = 0;
+                //RPOR1bits.RP2R = 0;
+                RPOR5bits.RP11R = 0;
+                //RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 0;
                 // LCDPrintChar('VICTORY!') or something…
                 break;
             case -1:
             	RPOR4bits.RP8R = 0;	// left wheel
-                RPOR1bits.RP2R = 0;
-                RPOR1bits.RP3R = 0;	// right wheel
+               RPOR4bits.RP9R = 0;
+               // RPOR1bits.RP2R = 0;
+               RPOR5bits.RP11R = 0;
+               // RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 0;
                 break;
                 
@@ -233,7 +252,7 @@ int PathDecision1() {	// before the u-turn
 //         RightSensorADC   < DARK) {	//black
 //            state = 1;  }	//90 deg right turn
      if( LeftSensorADC   < DARK &&	//black
-         MiddleSensorADC  < MIDDLE &&	//black
+         MiddleSensorADC  > MIDDLE &&	//black
          RightSensorADC   < DARK) {	//black
             state = 2; }	//U-Turn
 //      else if( LeftSensorADC   > 400 &&	//black
@@ -290,8 +309,10 @@ void LeftCorner() {
 
 void U_Turn() {
     RPOR4bits.RP8R = 18;	// left wheel
-	RPOR1bits.RP2R = 0;
-	RPOR1bits.RP3R = 0;	// right wheel
+	RPOR4bits.RP9R = 0;
+	//RPOR1bits.RP2R = 0;
+	RPOR5bits.RP11R = 0;
+	//RPOR1bits.RP3R = 0;	// right wheel
 	RPOR5bits.RP10R = 19;
 	PWM_Update(511.5);
 	int i = 0;
@@ -311,8 +332,10 @@ void __attribute__((interrupt,auto_psv)) _CNInterrupt(void){
 			state = 0;
 			// forward start
             RPOR4bits.RP8R = 0;	// left wheel
-            RPOR1bits.RP2R = 18;
-            RPOR1bits.RP3R = 0;	// right wheel
+            RPOR4bits.RP9R = 18;
+           // RPOR1bits.RP2R = 18;
+           RPOR5bits.RP11R = 0;
+           // RPOR1bits.RP3R = 0;	// right wheel
             RPOR5bits.RP10R = 19;
             // forward end
   		}              

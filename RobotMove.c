@@ -1,6 +1,7 @@
 // ******************************************************************************************* //
 
 #include "p24fj64ga002.h"
+#include "lcd.h"
 
 // ******************************************************************************************* //
 #define F_CY 14745600
@@ -71,29 +72,39 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 	double OC_value_left = 0.0;
 	double DUTY_CYCLE_RIGHT = 0.0;
 	double DUTY_CYCLE_LEFT = 0.0;
+	int i = 0;
+	char value[8];
 	
-	if (midADC < 400) {
-		leftADC = 511.5;
-		rightADC = 511.5;
-	}
-	else if (midADC > 400 && leftADC > 400 && rightADC > 400) {
+	if(midADC > 500 && leftADC > 250 && rightADC > 300) {
 		return;
-	}		
-//	if (leftADC > 500 && rightADC > 500 && midADC > 500) {
+	}
+	else{
+		if(midADC < 350){
+			leftADC=550;
+			rightADC=600;	
+		}
+		else{	
+			if(leftADC<=200){
+				leftADC=150;
+			}
+			if(rightADC<=250){
+				rightADC=200;
+			}
+		}
 		
-//	}	
+		// Need to check if left is actually left or if left is right
 	
-	// Need to check if left is actually left or if left is right
-
-	DUTY_CYCLE_LEFT = leftADC / 511.5;
-	DUTY_CYCLE_RIGHT = rightADC / 511.5;
-
-	OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
-	OC1RS = OC_value_right*0.9;
+		DUTY_CYCLE_LEFT =0.35+0.65*(leftADC-150) / 511.5;
+		DUTY_CYCLE_RIGHT =0.4+0.6*(rightADC-200) / 511.5;
 	
-	OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
-	OC2RS = OC_value_left*0.9;
+		OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
+		OC1RS = OC_value_right;
+		
+		OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
+		OC2RS = OC_value_left;
 	
+		return;
+	}
 }	
 
 /*
