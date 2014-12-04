@@ -2,9 +2,9 @@
 
 void PWM_init(double position);
 
-void PWM_Update1(double leftADC, double rightADC);
+void PWM_Update1(double rightADC, double leftADC, double midADC);
 
-void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int *code_counter);
+void barCode_Scan(double barcode_val, int *code_counter, double *min_val);
 
 
 

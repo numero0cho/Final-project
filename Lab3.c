@@ -28,205 +28,200 @@ _CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OS
 
 	// ******************************************************************************************* //
 
-	// Varible used to indicate that the current configuration of the keypad has been changed,
-	// and the KeypadScan() function needs to be called.
-
 #define F_CY 14745600
 
-	// FIXME: MAY NEED TO CHANGE FREQUENCY BELOW
 #define PWM_PERIOD (1/10000)
 #define PWM_FREQ 10000						// setting frequency to 100 Hz; MAY NEED TO BE CHANGED
-#define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
-#define MIDDLE           500    // cut-off between tile and white
-//#define MIDDLE          140    // cut-off between red and tile
-#define DARK            275    // cut-off between black and red
+#define PR_VALUE (57600/PWM_FREQ)-1			// using presalar of 256 with F_CY
+#define MIDDLE 500    						// cut-off between tile and white
+#define DARK 275    						// cut-off between black and red
 
-volatile int state = -1;
-volatile double POT_POS = 513.5;
+volatile int state = -1;						// controls which state we are in for line tracking/turngin
 
-//	preliminary final project code
-volatile double LeftSensorADC = 0.0;
+volatile double LeftSensorADC = 0.0;			// list values for each ADC conversion from PT's
 volatile double MiddleSensorADC = 0.0;
 volatile double RightSensorADC = 0.0;
-volatile int barcode[5] = { 2, 2, 2, 2, 2 };
-volatile unsigned int barcode_counter = 0;
+volatile double BarcodeSensorADC = 0.0;
+
+volatile int barcode_counter = -2;		// value to keep track of where we are in barcode
+volatile double minimum_val = 1500.0;	// value to keep track of minimum ADC value for barcode
+
+
+// ******************************************************************************************* //
+
 
 int main(void) {
+	
 	char value[8];
 	float k = 1.0;
 	int i = 0;
-
-	TRISBbits.TRISB8 = 0;	// setting pin to be output
-	TRISBbits.TRISB2 = 0;
-	TRISBbits.TRISB3 = 0;
-	TRISBbits.TRISB10 = 0;
+	
+	// BEGIN PINS FOR MOTOR CONTROL
+	// ->These are the updated pins that will be used for the RPORx pins to control the direction
+	//   of the motors.
+	TRISBbits.TRISB8 = 0;		// setting pin to be output	
+	TRISBbits.TRISB10 = 0;		
 	TRISBbits.TRISB9 = 0;
 	TRISBbits.TRISB11 = 0;
+	// END PINS FOR MOTOR CONTROL
+	
+	
+	TRISBbits.TRISB0 = 1;		// set RB0 (pin 4) to be input
+	AD1PCFGbits.PCFG2 = 0;		// Set RB0/AN2 (pin 4) to be analog input
+	
+//	TRISBbits.TRISB3 = 0;	
+	
+	
+	// BEGIN PINS FOR MOTION
+	// ->Set outputs for the ANx pins that will be used for controlling the line tracking
+	//   of the robot.  Also configure these pins in analog mode to read the voltage properly.
+	TRISAbits.TRISA0 = 1;		// set RA0 (pin 2) to be input
+	AD1PCFGbits.PCFG0 = 0;		// set RA0/AN0 (pin 2) to be analog input
 
-	// FOR MOTION TRANSISTORS
-	TRISAbits.TRISA0 = 1;	// set pin 2 to be input
-	AD1PCFGbits.PCFG0 = 0;	// set pin 2 to be analog input
+	TRISAbits.TRISA1 = 1;		// set RA1 (pin 3) to be input
+	AD1PCFGbits.PCFG1 = 0;		// set RA1/AN1 (pin 3) to be analog input
 
-	TRISAbits.TRISA1 = 1;	// set pin 3 to be input
-	AD1PCFGbits.PCFG1 = 0;	// set pin 3 to be analog input
-
-	TRISBbits.TRISB1 = 1;	// set pin 4 to be input
-	AD1PCFGbits.PCFG3 = 0;	// set pin 4 to be analog input
+	TRISBbits.TRISB2 = 1;		// set RB1 (pin 4) to be input
+	AD1PCFGbits.PCFG4 = 0;		// set RB1/AN3 (pin 4) to be analog input
 	// END PINS FOR MOTION
 
-	TRISBbits.TRISB5 = 1;	// switch 1 is input; pin 14
 
-	CNEN2bits.CN27IE = 1;	// enable change notification for switch 1
-//
-	IFS1bits.CNIF = 0;		// set CN flag low
-	IEC1bits.CNIE = 1;		// enable CN
-//
-//	AD1PCFG &= 0xFFFE;	// AN0 input pin is analog
-	AD1CON2 = 0; // Configure A/D voltage reference
+	// BEGIN SWITCH 1 CONTROL
+	TRISBbits.TRISB5 = 1;		// switch 1 RB5 (pin 14) is input
+
+	CNEN2bits.CN27IE = 1;		// enable change notification for switch 1
+	IFS1bits.CNIF = 0;			// set CN flag low
+	IEC1bits.CNIE = 1;			// enable CN
+	// END SWITCH 1 CONTROl
+	
+	
+	// BEGIN ADC CONTROL
+	// ->Set the control values in the various ADC registers.
+	AD1CON2 = 0; 				// Configure A/D voltage reference
 	AD1CON3 = 0x0101;
 	AD1CON1 = 0x20E4;
-	AD1CHS = 0; // Configure input channel
-	AD1CSSL = 0; // No inputs is scanned
+	AD1CHS = 0; 				// Configure input channel
+	AD1CSSL = 0; 				// No inputs is scanned
 	IFS0bits.AD1IF = 0;
-	AD1CON1bits.ADON = 1; // Turn on A/D
+	AD1CON1bits.ADON = 1; 		// Turn on A/D
+	// END ADC CONTROL
+	
 	
 	LCDInitialize();
-	PWM_init(POT_POS);
+	PWM_init(0.0);
 	
-          
  
 	while (1) {
 		
 		// The following three blocks of code should update the values read from the resistors to 
-		// be used in Kevin's conversion function.
+		// be used in the PWM_Update function.
 		
-		// FIXME: Must configure which input is being converted at this stage (for first one, set
-		//		AN0 to be converted; second, set AN1, etc.) [Might already be fixed?]
-		AD1CHS = 0;	// AN1 input pin is analog
+		AD1CHS = 0;								// ADC reads from AN0 (pin 2)
 		DelayUs(200);
-		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
+		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		MiddleSensorADC = ADC1BUF0;
+		
+		// The following lines control printing for error checking.
 		sprintf(value, "%3.0f", MiddleSensorADC);
-		LCDMoveCursor(0,0); LCDPrintString(value);
+		LCDMoveCursor(0,0); 
+		LCDPrintString(value);
 		LCDPrintChar(' ');
 
 		
-		AD1CHS = 1;
+		AD1CHS = 1;								// ADC reads from AN1 (pin 3)
 		DelayUs(200);
-		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-		LeftSensorADC = ADC1BUF0;	
+		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
+		LeftSensorADC = ADC1BUF0;
+		// The following lines control printing for error checking.	
 		sprintf(value, "%3.0f", LeftSensorADC);
-//		LCDMoveCursor(1,0);
 		LCDPrintString(value);
 
 		
-		AD1CHS = 3;
+		AD1CHS = 4;								// ADC reads from AN3 (pin 5)
 		DelayUs(200);
-		while (AD1CON1bits.DONE != 1){};     // keeps waiting until conversion finished
-//		RightSensorADC = (350/13)*(ADC1BUF0-2)+180;
+		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		RightSensorADC = ADC1BUF0;
+		// The following lines control printing for error checking.
 		sprintf(value, "%3.0f", RightSensorADC);
-		LCDMoveCursor(1,0); LCDPrintString(value);
-		
-		LCDPrintChar(' ');
-		LCDPrintChar(' ');
-		sprintf(value, "%1d", state);
+		LCDMoveCursor(1,0); 
 		LCDPrintString(value);
+		
 
-
-
-
-
-
-//		PWM_Update(POT_POS);
-	//	barCode_Scan(leftPT_val, rightPT_val, barcode, &barcode_counter);
-	
-	
-	
-//	    LCDClear();
-//      	sprintf(value, "%3.0f", RightSensorADC);
-//		LCDMoveCursor(1,0); LCDPrintString(value);
+		
+		AD1CHS = 2;								// ADC reads from AN4 (pin 6)
+		DelayUs(200);
+		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
+		BarcodeSensorADC = ADC1BUF0;
+//		sprintf(value, "%3.0f", BarcodeSensorADC);
 //		LCDPrintChar(' ');
-//		LCDPrintChar(' ');
-//		sprintf(value, "%1d", state);
 //		LCDPrintString(value);
-//								for (i=0; i<2000; i++){ // 30 would be 3 seconds
-//        			DelayUs(200); //increments of 1/10th of a second
-//   				}  
+		
+		sprintf(value, "%d", state);
+		LCDPrintChar(' ');
+		LCDPrintString(value);
+	//	barCode_Scan(BarcodeSensorADC, &barcode_counter, &minimum_val);	
+
 		switch (state) {
             case 0: // track path there
-//            	if (MiddleSensorADC < 350) { 
-//	            	k = 0.8;
-//	            	
-//	            }		
-//	            else k = 1.0;
-	            
-             //   POT_POS = 511.5 - 1.2*(RightSensorADC) + 1.0*(LeftSensorADC);
-
-
-				
                 PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
                 DelayUs(200);
 
-                PathDecision1();
+               // PathDecision1();
                 break;
+                
             case 1: // 90 deg right turn
                 //forward
                 RPOR4bits.RP8R = 0;	// left wheel
                 RPOR4bits.RP9R = 18;
-               // RPOR1bits.RP2R = 18;
-               RPOR5bits.RP11R = 0;
-               // RPOR1bits.RP3R = 0;	// right wheel
+                RPOR5bits.RP11R = 0;
                 RPOR5bits.RP10R = 19;
                 
                 RightCorner();
                 state = 0;
                 break;
+                
             case 2: // U Turn
-                U_Turn();
+            	U_Turn();
               
                 RPOR4bits.RP8R = 0;	// left wheel
-               RPOR4bits.RP9R = 18;
-               // RPOR1bits.RP2R = 18;
+                RPOR4bits.RP9R = 18;
                 RPOR5bits.RP11R = 0;
-                //RPOR1bits.RP3R = 0;	// right wheel
                 RPOR5bits.RP10R = 19;
+                
                 state = 0;
                 break;
+                
             case 3: // track path back
-                 POT_POS = 512 - 1.0*(RightSensorADC) + 1.0*(LeftSensorADC);
-             //   if (POT_POS > 1023) POT_POS = 1023;
-               // if (POT_POS < 0)	POT_POS = 0;
-                PWM_Update(POT_POS);
+				PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
+                DelayUs(200);
+
                 // forward
-                RPOR4bits.RP8R = 0;	// left wheel
-               RPOR4bits.RP9R = 18;
-               // RPOR1bits.RP2R = 18;
-                RPOR5bits.RP11R = 0;
-                //RPOR1bits.RP3R = 0;	// right wheel
+                RPOR4bits.RP8R = 0;		// left wheel
+                RPOR4bits.RP9R = 18;
+                RPOR5bits.RP11R = 0;	// left wheel
                 RPOR5bits.RP10R = 19;
+                
                 PathDecision2();
                 break;
+                
             case 4: // 90 deg left turn
                 LeftCorner();
                 state = 3;
                 break;
+                
             case 5: // Idle and victory!
                 // idle
                 RPOR4bits.RP8R = 0;	// left wheel
                 RPOR4bits.RP9R = 0;
-                //RPOR1bits.RP2R = 0;
-                RPOR5bits.RP11R = 0;
-                //RPOR1bits.RP3R = 0;	// right wheel
+                RPOR5bits.RP11R = 0;	//right wheel
                 RPOR5bits.RP10R = 0;
                 // LCDPrintChar('VICTORY!') or something…
                 break;
+                
             case -1:
-            	RPOR4bits.RP8R = 0;	// left wheel
-               RPOR4bits.RP9R = 0;
-               // RPOR1bits.RP2R = 0;
-               RPOR5bits.RP11R = 0;
-               // RPOR1bits.RP3R = 0;	// right wheel
+            	RPOR4bits.RP8R = 0;		// All grounded; no motion
+                RPOR4bits.RP9R = 0;
+                RPOR5bits.RP11R = 0;
                 RPOR5bits.RP10R = 0;
                 break;
                 
@@ -288,8 +283,8 @@ int PathDecision2() {   // return journey
 void RightCorner() {
     PWM_Update(1023);
     int i=0;
-    for (i=0; i<2000; i++){ // 30 would be 3 seconds
-        DelayUs(200); //increments of 1/10th of a second
+    for (i=0; i<2000; i++){ 	// 30 would be 3 seconds
+        DelayUs(200); 			//increments of 1/10th of a second
     }
    
     
@@ -300,8 +295,8 @@ void RightCorner() {
 void LeftCorner() {
     PWM_Update(0);
     int i =0;
-    for (i=0; i<10; i++){ // 30 would be 3 seconds
-        DelayUs(100000); //increments of 1/10th of a second
+    for (i=0; i<2000; i++){ 	// 30 would be 3 seconds
+        DelayUs(200);			 //increments of 1/10th of a second
     }
     
 }
@@ -310,15 +305,15 @@ void LeftCorner() {
 void U_Turn() {
     RPOR4bits.RP8R = 18;	// left wheel
 	RPOR4bits.RP9R = 0;
-	//RPOR1bits.RP2R = 0;
-	RPOR5bits.RP11R = 0;
-	//RPOR1bits.RP3R = 0;	// right wheel
+	RPOR5bits.RP11R = 0;	// right wheel
 	RPOR5bits.RP10R = 19;
-	PWM_Update(511.5);
+	
+	PWM_Update(550, 600, 0);
+	
 	int i = 0;
     for(i = 0; i < 1800; i++){
 	   DelayUs(1000);
-			}    
+	}    
     return;
  }
 
@@ -344,3 +339,16 @@ void __attribute__((interrupt,auto_psv)) _CNInterrupt(void){
 	}	
 }
 
+
+
+/***********************************************************/
+//		IF A DELAY IS NEEDED, USE THE FOLLOWING:
+//
+//		for (i=0; i<2000; i++){ 	
+//        	DelayUs(200); 			
+//   	}  
+/***********************************************************/
+//		KEVIN'S CODE IF NEEDED
+//           
+//   	POT_POS = 511.5 - 1.2*(RightSensorADC) + 1.0*(LeftSensorADC);
+/***********************************************************/

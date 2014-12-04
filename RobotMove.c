@@ -9,53 +9,23 @@
 #define PWM_FREQ 10000					// setting frequency to 10 kHz
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
 
-// preliminary final project code
-// FIXME:	If I understand correctly, the voltage of the transistor will be lower with less light
-//			reflected, so black will absorb the most light and have the least voltage.  The white 
-//			tape and tile will both be on the upper end of the reflectivity scale (tile is glossy,
-//			mostly white; tape is white), and will thus have higher ADC values.  The red tape of the
-//			barcode will be somewhere in the middle.
-#define lower_tile_val 400		// since tile is the most reflective, it will have the highest value
-#define upper_white_val 899		// white tape will be 2nd only to the tile; white, non-reflective
-#define lower_white_val 600
-#define upper_red_val   599		// red range will begin just below the white
-#define lower_red_val   150
-#define upper_black_val 200	// black tape will reflect little, and will only be at the low end
+#define lower_white_val 30.0		// white will reflect the most IR, and will have the highest ADC
+#define upper_black_val 10.0		// black tape will reflect little, and will only be at the low end
 
 
 /***********************************************************************************************/
 
 void PWM_init(double pot_position) {
 
-	double OC_value_right = 0.0;
-	double OC_value_left = 0.0;
-	double DUTY_CYCLE_RIGHT = 0.0;
-	double DUTY_CYCLE_LEFT = 0.0;
-	double position_ratio = 0.0;
-
-	position_ratio = pot_position / (1023 / 2);			// update duty cycle for new position
-	if (position_ratio < 1.0) {							// turning right
-		DUTY_CYCLE_LEFT = 1.0;
-		DUTY_CYCLE_RIGHT = position_ratio;
-	}
-	else {												// else turning left or idle
-		DUTY_CYCLE_RIGHT = 1.0;							// right motor on full
-		DUTY_CYCLE_LEFT = 2 - position_ratio;			// turning left
-	}
-
-	OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
-	OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
-
-	OC1R = 0.0;													// set the initial duty cycle to have motor OFF
-	OC1RS = OC_value_right;
+	OC1R = 0.0;						// set the initial duty cycle to have motor OFF
+	OC1RS = 0.0;					// set duty cycle to update with 0.0 on second cycle
 	OC1CONbits.OCTSEL = 1;
 	OC1CONbits.OCM = 6;
 
-	OC2R = 0.0;													// set the initial duty cycle to have the motor OFF
-	OC2RS = OC_value_left;
+	OC2R = 0.0;						// set the initial duty cycle to have the motor OFF
+	OC2RS = 0.0;					// set duty cycle to update with 0.0 on second cycle
 	OC2CONbits.OCTSEL = 1;
 	OC2CONbits.OCM = 6;
-
 
 	TMR3 = 0;
 	PR3 = PR_VALUE;
@@ -97,6 +67,9 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 		DUTY_CYCLE_LEFT =0.35+0.65*(leftADC-150) / 511.5;
 		DUTY_CYCLE_RIGHT =0.4+0.6*(rightADC-200) / 511.5;
 	
+//		DUTY_CYCLE_LEFT =1.0;
+//		DUTY_CYCLE_RIGHT =1.0;
+		
 		OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
 		OC1RS = OC_value_right;
 		
@@ -107,51 +80,83 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 	}
 }	
 
-/*
-void PWM_Update(double pot_position) {
+/***********************************************************************************************/
 
-	double OC_value_right = 0.0;
-	double OC_value_left = 0.0;
-	double DUTY_CYCLE_RIGHT = 0.0;
-	double DUTY_CYCLE_LEFT = 0.0;
-	double position_ratio = 0.0;
+void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
+	
+	int i = 0;
 	char value[8];
+	
+	switch (*code_counter) {
 
-	position_ratio = pot_position / (1023 / 2);			// update duty cycle for new position
-	if (position_ratio < 1.0) {							// turning right
-		DUTY_CYCLE_LEFT = 1.0;
-		DUTY_CYCLE_RIGHT = position_ratio;
+		// "case -2" is the polling state, checking if a barcode is being detected or not
+		case -2:
+
+			// We only have to check for the black bar in the initial case because this is the only
+			// start scenario for reading a barcode.
+			if (barcode_val <= upper_black_val) {		// if start bit detected
+				*code_counter = -1;
+			}	
+			break;
+
+		case -1:
+			
+			// if white is detected, we have left the start bit 
+			if (barcode_val >= lower_white_val) {
+				LCDClear();
+				LCDMoveCursor(1, 0);
+				LCDPrintString("BC");
+				LCDPrintChar(':');
+				*code_counter = 0;
+			}
+			// else if we find tile
+			break;
+
+		default:
+
+			// We now consider the rest of the barcode.  We will check if the value is white first.
+			// If the value is white, we stay where we are.  If the value is not white, we will begin
+			// checking for and updating the minimum value.  We do this until white is detected again,
+			// at which point we will compare the minimum to our ranges and print the appropriate value
+			// for the barcode.  We will then reset the state and the minimum value to ensure that the
+			// entire process will repeat itself upon detection of another barcode.
+			if (barcode_val > lower_white_val && *min_val >= 1000) {
+				*code_counter = *code_counter;
+				*min_val = 1500.0;
+			}
+			else {
+				if (barcode_val < *min_val) { 
+					*min_val = barcode_val;
+				}	
+				else if (barcode_val >= lower_white_val) {
+				//	If this happens, then we are back to white.
+					LCDMoveCursor(1, *code_counter + 3);
+					
+					if (*min_val <= upper_black_val)
+						LCDPrintChar('0');
+					else if (*min_val > upper_black_val && *min_val < lower_white_val)
+						LCDPrintChar('1');
+
+					*code_counter = *code_counter + 1;
+					*min_val = 1500.0;
+				}
+			}
+
+			if (*code_counter == 4) {
+				*code_counter = -2;
+				*min_val = 1500.0;
+			}
+
+			break;
 	}
-	else {												// else turning left or idle
-		DUTY_CYCLE_RIGHT = 1.0;							// right motor on full
-		DUTY_CYCLE_LEFT = 1 - position_ratio;			// turning left
-	}
 	
-	OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
-//	OC1R = OC_value_right;
-	OC1RS = OC_value_right*0.8;								// set the right motor value for the next cycle
-	
-	if(DUTY_CYCLE_RIGHT < 0.0) DUTY_CYCLE_RIGHT = 0.0;
-//	sprintf(value, "%3.f", DUTY_CYCLE_RIGHT*100);
-//	LCDMoveCursor(1, 0);
-//	LCDPrintString(value);
-//	LCDPrintChar('%');
-
-		
-	OC_value_left = DUTY_CYCLE_LEFT * (PR_VALUE);		// set output compare value for new position
-//	OC2R = OC_value_left;
-	OC2RS = OC_value_left*0.8;								// set the left mtoor value for the next cycle
-	
-	if(DUTY_CYCLE_LEFT < 0.0) DUTY_CYCLE_LEFT = 0.0;
-//	sprintf(value, "%3.f", DUTY_CYCLE_LEFT*100);
-//	LCDPrintString(value);
-//	LCDPrintChar('%');
-
 	return;
 }
 
-/***********************************************************************************************/
 
+
+
+/*
 void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int *code_counter) {
 	
 	char left = '\0';
@@ -266,7 +271,7 @@ void barCode_Scan(double left_val, double right_val, int barcode[], unsigned int
 
 	return;
 }
-
+*/
 // Nicolas Fajardo, Paul Cross, Kevin Morris
 // TEAM 202
 
