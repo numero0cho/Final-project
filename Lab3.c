@@ -45,6 +45,8 @@ volatile double BarcodeSensorADC = 0.0;
 
 volatile int barcode_counter = -2;		// value to keep track of where we are in barcode
 volatile double minimum_val = 1500.0;	// value to keep track of minimum ADC value for barcode
+volatile double maximum_val = 0.0;
+volatile int U_counter = 0;
 
 
 // ******************************************************************************************* //
@@ -122,10 +124,10 @@ int main(void) {
 		MiddleSensorADC = ADC1BUF0;
 		
 		// The following lines control printing for error checking.
-		sprintf(value, "%3.0f", MiddleSensorADC);
-		LCDMoveCursor(0,0); 
-		LCDPrintString(value);
-		LCDPrintChar(' ');
+	//	sprintf(value, "%3.0f", MiddleSensorADC);
+	//	LCDMoveCursor(0,0); 
+	//	LCDPrintString(value);
+	//	LCDPrintChar(' ');
 
 		
 		AD1CHS = 1;								// ADC reads from AN1 (pin 3)
@@ -133,8 +135,8 @@ int main(void) {
 		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		LeftSensorADC = ADC1BUF0;
 		// The following lines control printing for error checking.	
-		sprintf(value, "%3.0f", LeftSensorADC);
-		LCDPrintString(value);
+//		sprintf(value, "%3.0f", LeftSensorADC);
+	//	LCDPrintString(value);
 
 		
 		AD1CHS = 4;								// ADC reads from AN3 (pin 5)
@@ -143,8 +145,8 @@ int main(void) {
 		RightSensorADC = ADC1BUF0;
 		// The following lines control printing for error checking.
 		sprintf(value, "%3.0f", RightSensorADC);
-		LCDMoveCursor(1,0); 
-		LCDPrintString(value);
+	//	LCDMoveCursor(1,0); 
+	//	LCDPrintString(value);
 		
 
 		
@@ -152,21 +154,22 @@ int main(void) {
 		DelayUs(200);
 		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		BarcodeSensorADC = ADC1BUF0;
-//		sprintf(value, "%3.0f", BarcodeSensorADC);
-//		LCDPrintChar(' ');
-//		LCDPrintString(value);
-		
-		sprintf(value, "%d", state);
+		sprintf(value, "%3.0f", BarcodeSensorADC);
+		LCDMoveCursor(0,0);
 		LCDPrintChar(' ');
 		LCDPrintString(value);
-	//	barCode_Scan(BarcodeSensorADC, &barcode_counter, &minimum_val);	
+		
+		sprintf(value, "%d", state);
+//		LCDPrintChar(' ');
+//		LCDPrintString(value);
+		barCode_Scan(BarcodeSensorADC, &barcode_counter, &minimum_val, &maximum_val);	
 
 		switch (state) {
             case 0: // track path there
                 PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
                 DelayUs(200);
 
-               // PathDecision1();
+                PathDecision1();
                 break;
                 
             case 1: // 90 deg right turn
@@ -182,13 +185,13 @@ int main(void) {
                 
             case 2: // U Turn
             	U_Turn();
-              
+                barcode_counter = 4;
                 RPOR4bits.RP8R = 0;	// left wheel
                 RPOR4bits.RP9R = 18;
                 RPOR5bits.RP11R = 0;
                 RPOR5bits.RP10R = 19;
                 
-                state = 0;
+                state = 3;
                 break;
                 
             case 3: // track path back
@@ -201,7 +204,7 @@ int main(void) {
                 RPOR5bits.RP11R = 0;	// left wheel
                 RPOR5bits.RP10R = 19;
                 
-                PathDecision2();
+               // PathDecision2();
                 break;
                 
             case 4: // 90 deg left turn
@@ -246,10 +249,24 @@ int PathDecision1() {	// before the u-turn
 //         MiddleSensorADC  > MIDDLE &&	//tile
 //         RightSensorADC   < DARK) {	//black
 //            state = 1;  }	//90 deg right turn
-     if( LeftSensorADC   < DARK &&	//black
-         MiddleSensorADC  > MIDDLE &&	//black
-         RightSensorADC   < DARK) {	//black
-            state = 2; }	//U-Turn
+//     if( LeftSensorADC   < DARK &&	//black
+//         MiddleSensorADC  < DARK &&	//black
+//         RightSensorADC < DARK) {	//black
+//            state = 2; }	//U-Turn
+     if( U_counter == 0 && LeftSensorADC < DARK &&	//black
+         MiddleSensorADC  < DARK &&	//black
+         RightSensorADC < DARK) {	//black
+            U_counter = 1; }	//U-Turn
+     if (U_counter == 1 && LeftSensorADC > MIDDLE &&
+         MiddleSensorADC  > MIDDLE &&    
+         RightSensorADC   > MIDDLE) {
+	     state = 2;    
+	 }
+	 else if (U_counter == 1 && LeftSensorADC < DARK &&
+         MiddleSensorADC  < DARK &&
+         RightSensorADC < DARK) {
+	         U_counter = 0;      
+	  }
 //      else if( LeftSensorADC   > 400 &&	//black
 //         MiddleSensorADC  > 400 &&	//black
 //         RightSensorADC   > 400) {
@@ -272,11 +289,18 @@ int PathDecision2() {   // return journey
 //         MiddleSensorADC  > MIDDLE &&     //tile
 //         RightSensorADC   < DARK) {	//black
 //            state = 4;  }	//90 deg left turn
-     if // end of track: open tile
-        ( LeftSensorADC   > MIDDLE &&     //Tile
-         MiddleSensorADC  > MIDDLE &&     //Tile
-         RightSensorADC   > MIDDLE) {     //Tile
-            state = 5; }	//idle
+
+	if (LeftSensorADC > MIDDLE && MiddleSensorADC < DARK
+		&& RightSensorADC > MIDDLE) {
+			U_counter = 1;
+		}
+	if (U_counter == 1 && LeftSensorADC > MIDDLE && MiddleSensorADC > MIDDLE 
+		&& RightSensorADC > MIDDLE) {
+		state = 5;	
+	}		
+    else if (LeftSensorADC < DARK || RightSensorADC < DARK)
+    	U_counter = 0;
+    	
     return;
 }
 
@@ -311,8 +335,9 @@ void U_Turn() {
 	PWM_Update(550, 600, 0);
 	
 	int i = 0;
-    for(i = 0; i < 1800; i++){
-	   DelayUs(1000);
+    for(i = 0; i < 1000; i++){
+	   DelayUs(200);
+	   if (MiddleSensorADC < DARK) break;
 	}    
     return;
  }

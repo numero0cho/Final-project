@@ -9,8 +9,9 @@
 #define PWM_FREQ 10000					// setting frequency to 10 kHz
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
 
-#define lower_white_val 30.0		// white will reflect the most IR, and will have the highest ADC
+#define lower_white_val 42.0		// white will reflect the most IR, and will have the highest ADC
 #define upper_black_val 10.0		// black tape will reflect little, and will only be at the low end
+#define lower_tile_val 25.0
 
 
 /***********************************************************************************************/
@@ -82,7 +83,7 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 
 /***********************************************************************************************/
 
-void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
+void barCode_Scan(double barcode_val, int *code_counter, double *min_val, double *max_val) {
 	
 	int i = 0;
 	char value[8];
@@ -101,15 +102,26 @@ void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
 
 		case -1:
 			
+			if (barcode_val > *max_val) {
+				*max_val = barcode_val;
+			}	
+			
 			// if white is detected, we have left the start bit 
-			if (barcode_val >= lower_white_val) {
+			if (*max_val >= lower_white_val) {
 				LCDClear();
 				LCDMoveCursor(1, 0);
 				LCDPrintString("BC");
 				LCDPrintChar(':');
 				*code_counter = 0;
+				*max_val = 0.0;
 			}
 			// else if we find tile
+			else if (barcode_val <= upper_black_val && *max_val < lower_white_val && *max_val >= lower_tile_val) {
+				*max_val = 0.0;
+				*min_val = 1500.0;
+				LCDClear();
+				*code_counter = -2;
+			}	
 			break;
 
 		default:
@@ -123,11 +135,12 @@ void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
 			if (barcode_val > lower_white_val && *min_val >= 1000) {
 				*code_counter = *code_counter;
 				*min_val = 1500.0;
+				*max_val = 0.0;
 			}
 			else {
 				if (barcode_val < *min_val) { 
 					*min_val = barcode_val;
-				}	
+				}		
 				else if (barcode_val >= lower_white_val) {
 				//	If this happens, then we are back to white.
 					LCDMoveCursor(1, *code_counter + 3);
@@ -139,6 +152,7 @@ void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
 
 					*code_counter = *code_counter + 1;
 					*min_val = 1500.0;
+					
 				}
 			}
 
@@ -146,7 +160,7 @@ void barCode_Scan(double barcode_val, int *code_counter, double *min_val) {
 				*code_counter = -2;
 				*min_val = 1500.0;
 			}
-
+				*max_val = 0.0;
 			break;
 	}
 	

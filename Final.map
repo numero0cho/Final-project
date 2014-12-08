@@ -136,24 +136,24 @@ section                    address   length (PC units)   length (bytes) (dec)
 -------                    -------   -----------------   --------------------
 .text                        0x200              0x1af2          0x286b  (10347)
 .const                      0x1cf2                 0xe            0x15  (21)
-.text                       0x1d00               0x74e           0xaf5  (2805)
-.dinit                      0x244e               0x1c2           0x2a3  (675)
-.text                       0x2610               0x16c           0x222  (546)
+.text                       0x1d00               0x940           0xde0  (3552)
+.dinit                      0x2640               0x1c2           0x2a3  (675)
+.text                       0x2802               0x16c           0x222  (546)
 
-                     Total program memory used (bytes):         0x383a  (14394) 22%
+                     Total program memory used (bytes):         0x3b25  (15141) 23%
 
 
 Data Memory  [Origin = 0x800, Length = 0x2000]
 
 section                    address      alignment gaps    total length  (dec)
 -------                    -------      --------------    -------------------
-.nbss                        0x800                   0            0x10  (16)
-.ndata                       0x810                   0             0x8  (8)
-.data                        0x818                   0           0x250  (592)
-.bss                         0xa68                   0             0x6  (6)
-.data                        0xa6e                   0             0x2  (2)
+.nbss                        0x800                   0            0x16  (22)
+.ndata                       0x816                   0             0x8  (8)
+.data                        0x81e                   0           0x250  (592)
+.bss                         0xa6e                   0             0x6  (6)
+.data                        0xa74                   0             0x2  (2)
 
-                        Total data memory used (bytes):          0x270  (624) 7%
+                        Total data memory used (bytes):          0x276  (630) 7%
 
 
 Dynamic Memory Usage
@@ -161,9 +161,9 @@ Dynamic Memory Usage
 region                     address                      maximum length  (dec)
 ------                     -------                      ---------------------
 heap                             0                                   0  (0)
-stack                        0xa70                              0x1d90  (7568)
+stack                        0xa76                              0x1d8a  (7562)
 
-                        Maximum dynamic memory (bytes):         0x1d90  (7568)
+                        Maximum dynamic memory (bytes):         0x1d8a  (7562)
 
 
 External Symbols in Data Memory (by address):
@@ -172,17 +172,19 @@ External Symbols in Data Memory (by address):
                     0x0804                  _MiddleSensorADC
                     0x0808                  _RightSensorADC
                     0x080c                  _BarcodeSensorADC
-                    0x0810                  _state
-                    0x0812                  _barcode_counter
-                    0x0814                  _minimum_val
-                    0x0818                  __powers_
-                    0x08c8                  __npowers_
-                    0x0a42                  __iob
-                    0x0a66                  __Files
-                    0x0a68                  __outdone
-                    0x0a69                  __sibuf
-                    0x0a6b                  __sobuf
-                    0x0a6e                  ___C30_UART
+                    0x0810                  _maximum_val
+                    0x0814                  _U_counter
+                    0x0816                  _state
+                    0x0818                  _barcode_counter
+                    0x081a                  _minimum_val
+                    0x081e                  __powers_
+                    0x08ce                  __npowers_
+                    0x0a48                  __iob
+                    0x0a6c                  __Files
+                    0x0a6e                  __outdone
+                    0x0a6f                  __sibuf
+                    0x0a71                  __sobuf
+                    0x0a74                  ___C30_UART
 
 External Symbols in Data Memory (by name):
 
@@ -190,17 +192,19 @@ External Symbols in Data Memory (by name):
                     0x0800                  _LeftSensorADC
                     0x0804                  _MiddleSensorADC
                     0x0808                  _RightSensorADC
-                    0x0a66                  __Files
-                    0x0a6e                  ___C30_UART
-                    0x0a42                  __iob
-                    0x08c8                  __npowers_
-                    0x0a68                  __outdone
-                    0x0818                  __powers_
-                    0x0a69                  __sibuf
-                    0x0a6b                  __sobuf
-                    0x0812                  _barcode_counter
-                    0x0814                  _minimum_val
-                    0x0810                  _state
+                    0x0814                  _U_counter
+                    0x0a6c                  __Files
+                    0x0a74                  ___C30_UART
+                    0x0a48                  __iob
+                    0x08ce                  __npowers_
+                    0x0a6e                  __outdone
+                    0x081e                  __powers_
+                    0x0a6f                  __sibuf
+                    0x0a71                  __sobuf
+                    0x0818                  _barcode_counter
+                    0x0810                  _maximum_val
+                    0x081a                  _minimum_val
+                    0x0816                  _state
 
 External Symbols in Program Memory (by address):
 
@@ -265,42 +269,42 @@ External Symbols in Program Memory (by address):
                   0x000e54                  __sprintf_cdfFnopuxX
                   0x000ffa                  __vfprintf_cdfFnopuxX
                   0x001d00                  _main
-                  0x001f6a                  _PathDecision1
-                  0x001fc8                  _PathDecision2
-                  0x002026                  _RightCorner
-                  0x002048                  _LeftCorner
-                  0x00206a                  _U_Turn
-                  0x0020b4                  __CNInterrupt
-                  0x00210c                  _PWM_init
-                  0x002148                  _PWM_Update
-                  0x0022c0                  _barCode_Scan
-                  0x002610                  _DelayUs
-                  0x00263a                  _EnableLCD
-                  0x002668                  _WriteLCD
-                  0x0026ac                  _LCDInitialize
-                  0x00271e                  _LCDClear
-                  0x00272c                  _LCDMoveCursor
-                  0x00274e                  _LCDPrintChar
-                  0x002760                  _LCDPrintString
+                  0x001f4e                  _PathDecision1
+                  0x002064                  _PathDecision2
+                  0x002154                  _RightCorner
+                  0x002176                  _LeftCorner
+                  0x002198                  _U_Turn
+                  0x002204                  __CNInterrupt
+                  0x00225c                  _PWM_init
+                  0x002298                  _PWM_Update
+                  0x002410                  _barCode_Scan
+                  0x002802                  _DelayUs
+                  0x00282c                  _EnableLCD
+                  0x00285a                  _WriteLCD
+                  0x00289e                  _LCDInitialize
+                  0x002910                  _LCDClear
+                  0x00291e                  _LCDMoveCursor
+                  0x002940                  _LCDPrintChar
+                  0x002952                  _LCDPrintString
 
 External Symbols in Program Memory (by name):
 
-                  0x002610                  _DelayUs
-                  0x00263a                  _EnableLCD
-                  0x00271e                  _LCDClear
-                  0x0026ac                  _LCDInitialize
-                  0x00272c                  _LCDMoveCursor
-                  0x00274e                  _LCDPrintChar
-                  0x002760                  _LCDPrintString
-                  0x002048                  _LeftCorner
-                  0x002148                  _PWM_Update
-                  0x00210c                  _PWM_init
-                  0x001f6a                  _PathDecision1
-                  0x001fc8                  _PathDecision2
-                  0x002026                  _RightCorner
-                  0x00206a                  _U_Turn
-                  0x002668                  _WriteLCD
-                  0x0020b4                  __CNInterrupt
+                  0x002802                  _DelayUs
+                  0x00282c                  _EnableLCD
+                  0x002910                  _LCDClear
+                  0x00289e                  _LCDInitialize
+                  0x00291e                  _LCDMoveCursor
+                  0x002940                  _LCDPrintChar
+                  0x002952                  _LCDPrintString
+                  0x002176                  _LeftCorner
+                  0x002298                  _PWM_Update
+                  0x00225c                  _PWM_init
+                  0x001f4e                  _PathDecision1
+                  0x002064                  _PathDecision2
+                  0x002154                  _RightCorner
+                  0x002198                  _U_Turn
+                  0x00285a                  _WriteLCD
+                  0x002204                  __CNInterrupt
                   0x0002a6                  __DefaultInterrupt
                   0x0007b2                  ___adddf3
                   0x00031c                  ___addsf3
@@ -359,7 +363,7 @@ External Symbols in Program Memory (by name):
                   0x000200                  __resetPRI
                   0x000e54                  __sprintf_cdfFnopuxX
                   0x000ffa                  __vfprintf_cdfFnopuxX
-                  0x0022c0                  _barCode_Scan
+                  0x002410                  _barCode_Scan
                   0x00076e                  _frexp
                   0x00076e                  _frexpl
                   0x001d00                  _main
@@ -593,7 +597,7 @@ __CONFIG1         0x00abfe          0x2
                   0x000034          0x4 LONG 0x2a6 DEFINED (__SI2C1Interrupt)?ABSOLUTE (__SI2C1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000036          0x4 LONG 0x2a6 DEFINED (__MI2C1Interrupt)?ABSOLUTE (__MI2C1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000038          0x4 LONG 0x2a6 DEFINED (__CompInterrupt)?ABSOLUTE (__CompInterrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x00003a          0x4 LONG 0x20b4 DEFINED (__CNInterrupt)?ABSOLUTE (__CNInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x00003a          0x4 LONG 0x2204 DEFINED (__CNInterrupt)?ABSOLUTE (__CNInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00003c          0x4 LONG 0x2a6 DEFINED (__INT1Interrupt)?ABSOLUTE (__INT1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00003e          0x4 LONG 0x2a6 DEFINED (__Interrupt21)?ABSOLUTE (__Interrupt21):ABSOLUTE (__DefaultInterrupt)
                   0x000040          0x4 LONG 0x2a6 DEFINED (__Interrupt22)?ABSOLUTE (__Interrupt22):ABSOLUTE (__DefaultInterrupt)
@@ -721,7 +725,7 @@ __CONFIG1         0x00abfe          0x2
                   0x000134          0x4 LONG 0x2a6 DEFINED (__AltSI2C1Interrupt)?ABSOLUTE (__AltSI2C1Interrupt):DEFINED (__SI2C1Interrupt)?ABSOLUTE (__SI2C1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000136          0x4 LONG 0x2a6 DEFINED (__AltMI2C1Interrupt)?ABSOLUTE (__AltMI2C1Interrupt):DEFINED (__MI2C1Interrupt)?ABSOLUTE (__MI2C1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x000138          0x4 LONG 0x2a6 DEFINED (__AltCompInterrupt)?ABSOLUTE (__AltCompInterrupt):DEFINED (__CompInterrupt)?ABSOLUTE (__CompInterrupt):ABSOLUTE (__DefaultInterrupt)
-                  0x00013a          0x4 LONG 0x20b4 DEFINED (__AltCNInterrupt)?ABSOLUTE (__AltCNInterrupt):DEFINED (__CNInterrupt)?ABSOLUTE (__CNInterrupt):ABSOLUTE (__DefaultInterrupt)
+                  0x00013a          0x4 LONG 0x2204 DEFINED (__AltCNInterrupt)?ABSOLUTE (__AltCNInterrupt):DEFINED (__CNInterrupt)?ABSOLUTE (__CNInterrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00013c          0x4 LONG 0x2a6 DEFINED (__AltINT1Interrupt)?ABSOLUTE (__AltINT1Interrupt):DEFINED (__INT1Interrupt)?ABSOLUTE (__INT1Interrupt):ABSOLUTE (__DefaultInterrupt)
                   0x00013e          0x4 LONG 0x2a6 DEFINED (__AltInterrupt21)?ABSOLUTE (__AltInterrupt21):DEFINED (__Interrupt21)?ABSOLUTE (__Interrupt21):ABSOLUTE (__DefaultInterrupt)
                   0x000140          0x4 LONG 0x2a6 DEFINED (__AltInterrupt22)?ABSOLUTE (__AltInterrupt22):DEFINED (__Interrupt22)?ABSOLUTE (__Interrupt22):ABSOLUTE (__DefaultInterrupt)
@@ -1507,66 +1511,68 @@ __c30_signature
  __c30_signature
                   0x00011a          0x6 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libm-coff.a(dtype.o)
 
-.nbss               0x0800         0x10
- .nbss              0x0800         0x10 Lab3.o
+.nbss               0x0800         0x16
+ .nbss              0x0800         0x16 Lab3.o
                     0x0800                  LeftSensorADC
                     0x0804                  MiddleSensorADC
                     0x0808                  RightSensorADC
                     0x080c                  BarcodeSensorADC
+                    0x0810                  maximum_val
+                    0x0814                  U_counter
 
-.ndata              0x0810          0x8
- .ndata             0x0810          0x8 Lab3.o
-                    0x0810                  state
-                    0x0812                  barcode_counter
-                    0x0814                  minimum_val
+.ndata              0x0816          0x8
+ .ndata             0x0816          0x8 Lab3.o
+                    0x0816                  state
+                    0x0818                  barcode_counter
+                    0x081a                  minimum_val
 
-.data               0x0818        0x250
- .data              0x0818        0x160 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(powers.o)
-                    0x0818                  _powers_
-                    0x08c8                  _npowers_
- .data              0x0978         0xca c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(doprnt_cdfFnopuxX.XXo)
- .data              0x0a42         0x26 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(_iob.o)
-                    0x0a42                  _iob
-                    0x0a66                  _Files
+.data               0x081e        0x250
+ .data              0x081e        0x160 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(powers.o)
+                    0x081e                  _powers_
+                    0x08ce                  _npowers_
+ .data              0x097e         0xca c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(doprnt_cdfFnopuxX.XXo)
+ .data              0x0a48         0x26 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(_iob.o)
+                    0x0a48                  _iob
+                    0x0a6c                  _Files
 
-.bss                0x0a68          0x6
- .bss               0x0a68          0x6 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(_iob.o)
-                    0x0a68                  _outdone
-                    0x0a69                  _sibuf
-                    0x0a6b                  _sobuf
+.bss                0x0a6e          0x6
+ .bss               0x0a6e          0x6 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libc-coff.a(_iob.o)
+                    0x0a6e                  _outdone
+                    0x0a6f                  _sibuf
+                    0x0a71                  _sobuf
 
-.data               0x0a6e          0x2
- .data              0x0a6e          0x2 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libpic30-coff.a(c30_uart.o)
-                    0x0a6e                  __C30_UART
+.data               0x0a74          0x2
+ .data              0x0a74          0x2 c:/program files (x86)/microchip/xc16/v1.22/bin/bin/../../lib\libpic30-coff.a(c30_uart.o)
+                    0x0a74                  __C30_UART
 
 .const              0x9cf2          0xe load address 0x001cf2  
  .const             0x9cf2          0xa Lab3.o
  .const             0x9cfc          0x4 RobotMove.o
 
-.text             0x001d00        0x74e
- .text            0x001d00        0x40c Lab3.o
+.text             0x001d00        0x940
+ .text            0x001d00        0x55c Lab3.o
                   0x001d00                  main
-                  0x001f6a                  PathDecision1
-                  0x001fc8                  PathDecision2
-                  0x002026                  RightCorner
-                  0x002048                  LeftCorner
-                  0x00206a                  U_Turn
-                  0x0020b4                  _CNInterrupt
- .text            0x00210c        0x342 RobotMove.o
-                  0x00210c                  PWM_init
-                  0x002148                  PWM_Update
-                  0x0022c0                  barCode_Scan
+                  0x001f4e                  PathDecision1
+                  0x002064                  PathDecision2
+                  0x002154                  RightCorner
+                  0x002176                  LeftCorner
+                  0x002198                  U_Turn
+                  0x002204                  _CNInterrupt
+ .text            0x00225c        0x3e4 RobotMove.o
+                  0x00225c                  PWM_init
+                  0x002298                  PWM_Update
+                  0x002410                  barCode_Scan
 
-.dinit            0x00244e        0x1c2
- .dinit           0x00244e        0x1c2 data_init
+.dinit            0x002640        0x1c2
+ .dinit           0x002640        0x1c2 data_init
 
-.text             0x002610        0x16c
- .text            0x002610        0x16c lcd.o
-                  0x002610                  DelayUs
-                  0x00263a                  EnableLCD
-                  0x002668                  WriteLCD
-                  0x0026ac                  LCDInitialize
-                  0x00271e                  LCDClear
-                  0x00272c                  LCDMoveCursor
-                  0x00274e                  LCDPrintChar
-                  0x002760                  LCDPrintString
+.text             0x002802        0x16c
+ .text            0x002802        0x16c lcd.o
+                  0x002802                  DelayUs
+                  0x00282c                  EnableLCD
+                  0x00285a                  WriteLCD
+                  0x00289e                  LCDInitialize
+                  0x002910                  LCDClear
+                  0x00291e                  LCDMoveCursor
+                  0x002940                  LCDPrintChar
+                  0x002952                  LCDPrintString
