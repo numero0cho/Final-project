@@ -27,6 +27,11 @@ _CONFIG2(IESO_OFF & SOSCSEL_SOSC & WUTSEL_LEG & FNOSC_PRIPLL & FCKSM_CSDCMD & OS
 	IOL1WAY_OFF & I2C1SEL_PRI & POSCMOD_XT)
 
 	// ******************************************************************************************* //
+void PathDecision1();
+void PathDecision2();
+void U_Turn();
+void LeftCorner();
+void RightCorner();
 
 #define F_CY 14745600
 
@@ -42,12 +47,14 @@ volatile double LeftSensorADC = 0.0;			// list values for each ADC conversion fr
 volatile double MiddleSensorADC = 0.0;
 volatile double RightSensorADC = 0.0;
 volatile double BarcodeSensorADC = 0.0;
+volatile double TempSensorADC = 0.0;
 
 volatile int barcode_counter = -2;		// value to keep track of where we are in barcode
 volatile double minimum_val = 1500.0;	// value to keep track of minimum ADC value for barcode
 volatile double maximum_val = 0.0;
 volatile int U_counter = 0;
 
+volatile int loop_counter = 0;
 
 // ******************************************************************************************* //
 
@@ -55,8 +62,6 @@ volatile int U_counter = 0;
 int main(void) {
 	
 	char value[8];
-	float k = 1.0;
-	int i = 0;
 	
 	// BEGIN PINS FOR MOTOR CONTROL
 	// ->These are the updated pins that will be used for the RPORx pins to control the direction
@@ -71,7 +76,8 @@ int main(void) {
 	TRISBbits.TRISB0 = 1;		// set RB0 (pin 4) to be input
 	AD1PCFGbits.PCFG2 = 0;		// Set RB0/AN2 (pin 4) to be analog input
 	
-//	TRISBbits.TRISB3 = 0;	
+//	TRISBbits.TRISB3 = 1;	
+//	AD1PCFGbits.PCFG5 = 0;		// Set RB0/AN2 (pin 4) to be analog input
 	
 	
 	// BEGIN PINS FOR MOTION
@@ -123,11 +129,11 @@ int main(void) {
 		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		MiddleSensorADC = ADC1BUF0;
 		
-		// The following lines control printing for error checking.
-	//	sprintf(value, "%3.0f", MiddleSensorADC);
-	//	LCDMoveCursor(0,0); 
-	//	LCDPrintString(value);
-	//	LCDPrintChar(' ');
+	// The following lines control printing for error checking.
+		sprintf(value, "%3.0f", MiddleSensorADC);
+		LCDMoveCursor(0,0); 
+		LCDPrintString(value);
+//		LCDPrintChar(' ');
 
 		
 		AD1CHS = 1;								// ADC reads from AN1 (pin 3)
@@ -136,7 +142,7 @@ int main(void) {
 		LeftSensorADC = ADC1BUF0;
 		// The following lines control printing for error checking.	
 //		sprintf(value, "%3.0f", LeftSensorADC);
-	//	LCDPrintString(value);
+//		LCDPrintString(value);
 
 		
 		AD1CHS = 4;								// ADC reads from AN3 (pin 5)
@@ -144,9 +150,9 @@ int main(void) {
 		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		RightSensorADC = ADC1BUF0;
 		// The following lines control printing for error checking.
-		sprintf(value, "%3.0f", RightSensorADC);
-	//	LCDMoveCursor(1,0); 
-	//	LCDPrintString(value);
+//		sprintf(value, "%3.0f", RightSensorADC);
+//		LCDMoveCursor(1,0); 
+//		LCDPrintString(value);
 		
 
 		
@@ -154,19 +160,28 @@ int main(void) {
 		DelayUs(200);
 		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
 		BarcodeSensorADC = ADC1BUF0;
-		sprintf(value, "%3.0f", BarcodeSensorADC);
-		LCDMoveCursor(0,0);
-		LCDPrintChar(' ');
-		LCDPrintString(value);
-		
-		sprintf(value, "%d", state);
+//		sprintf(value, "%3.0f", BarcodeSensorADC);
+//		LCDMoveCursor(0,0);
 //		LCDPrintChar(' ');
+//		LCDPrintString(value);
+		
+//		AD1CHS = 5;								
+//		DelayUs(200);
+//		while (AD1CON1bits.DONE != 1){};     	// keeps waiting until conversion finished
+//		TempSensorADC = ADC1BUF0;
+//		sprintf(value, "%3.0f", TempSensorADC);
+//		LCDMoveCursor(0,0);
+//		LCDPrintString(value);
+		
+
+//		sprintf(value, "%d", state);
+	//	LCDPrintChar(' ');
 //		LCDPrintString(value);
 		barCode_Scan(BarcodeSensorADC, &barcode_counter, &minimum_val, &maximum_val);	
 
 		switch (state) {
             case 0: // track path there
-                PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
+                PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC, barcode_counter);
                 DelayUs(200);
 
                 PathDecision1();
@@ -180,12 +195,12 @@ int main(void) {
                 RPOR5bits.RP10R = 19;
                 
                 RightCorner();
-                state = 0;
+                state = 6;
                 break;
                 
             case 2: // U Turn
             	U_Turn();
-                barcode_counter = 4;
+                barcode_counter = -2;
                 RPOR4bits.RP8R = 0;	// left wheel
                 RPOR4bits.RP9R = 18;
                 RPOR5bits.RP11R = 0;
@@ -195,7 +210,7 @@ int main(void) {
                 break;
                 
             case 3: // track path back
-				PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC);
+				PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC, barcode_counter);
                 DelayUs(200);
 
                 // forward
@@ -221,6 +236,15 @@ int main(void) {
                 // LCDPrintChar('VICTORY!') or something…
                 break;
                 
+//            case 6:		// loop line tracking on forward journey
+//                PWM_Update(LeftSensorADC, RightSensorADC, MiddleSensorADC, barcode_counter);
+//                DelayUs(200);
+//
+//                PathDecision1();
+//            
+//            
+//            	break;
+                
             case -1:
             	RPOR4bits.RP8R = 0;		// All grounded; no motion
                 RPOR4bits.RP9R = 0;
@@ -235,24 +259,17 @@ int main(void) {
 	return 0;
 }
 
+/***********************************************************/
 
-int PathDecision1() {	// before the u-turn
+void PathDecision1() {	// before the u-turn
     
     
-//    if // Gamma Intersection
+//     if // Gamma Intersection inner loop enter
 //        ( LeftSensorADC   > MIDDLE &&     //tile
 // 		 MiddleSensorADC  < DARK &&	//black
 //         RightSensorADC   < DARK) {	//black
 //            state = 1;  } 	//90 deg right turn
-////    else if // Capital T intersection
-//        ( LeftSensorADC   < DARK &&	//black
-//         MiddleSensorADC  > MIDDLE &&	//tile
-//         RightSensorADC   < DARK) {	//black
-//            state = 1;  }	//90 deg right turn
-//     if( LeftSensorADC   < DARK &&	//black
-//         MiddleSensorADC  < DARK &&	//black
-//         RightSensorADC < DARK) {	//black
-//            state = 2; }	//U-Turn
+
      if( U_counter == 0 && LeftSensorADC < DARK &&	//black
          MiddleSensorADC  < DARK &&	//black
          RightSensorADC < DARK) {	//black
@@ -276,7 +293,9 @@ int PathDecision1() {	// before the u-turn
     return;
 }
 
-int PathDecision2() {   // return journey
+/***********************************************************/
+
+void PathDecision2() {   // return journey
     
     
 //    if // 7 Intersection
@@ -304,17 +323,40 @@ int PathDecision2() {   // return journey
     return;
 }
 
+/***********************************************************/
+
+//void PathDecision3() {   // inner loop decisions on forward journey
+//    
+//	if (LeftSensorADC < DARK 
+//		&& MiddleSensorADC < DARK
+//		&& RightSensorADC < DARK) {
+//			RightCorner();
+//			++loop_counter;
+//			if (loop_counter = 2) {
+//				RightCorner();
+//				state = 0;
+//				loop_counter = 0;
+//			}		
+//	}
+//	else if (LeftSensorADC > MIDDLE
+//		&& MiddleSensorADC < DARK
+//		&& RightSensorADC < DARK) {
+//			RightCorner();	
+//	}	
+//    return;
+//}
+
+/***********************************************************/
+
 void RightCorner() {
-    PWM_Update(1023);
+    PWM_Update(0, 600, 0);
     int i=0;
-    for (i=0; i<2000; i++){ 	// 30 would be 3 seconds
-        DelayUs(200); 			//increments of 1/10th of a second
+    for (i=0; i<500; i++){ 	
+        DelayUs(200); 			
     }
-   
-    
-    
-    
 }
+
+/***********************************************************/
 
 void LeftCorner() {
     PWM_Update(0);
@@ -325,6 +367,7 @@ void LeftCorner() {
     
 }
 
+/***********************************************************/
 
 void U_Turn() {
     RPOR4bits.RP8R = 18;	// left wheel
@@ -332,7 +375,7 @@ void U_Turn() {
 	RPOR5bits.RP11R = 0;	// right wheel
 	RPOR5bits.RP10R = 19;
 	
-	PWM_Update(550, 600, 0);
+	PWM_Update(550, 600, 0, 0);
 	
 	int i = 0;
     for(i = 0; i < 1000; i++){
@@ -342,6 +385,7 @@ void U_Turn() {
     return;
  }
 
+/***********************************************************/
 
 void __attribute__((interrupt,auto_psv)) _CNInterrupt(void){
 

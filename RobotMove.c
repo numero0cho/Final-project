@@ -9,10 +9,9 @@
 #define PWM_FREQ 10000					// setting frequency to 10 kHz
 #define PR_VALUE (57600/PWM_FREQ)-1		// using presalar of 256 with F_CY
 
-#define lower_white_val 42.0		// white will reflect the most IR, and will have the highest ADC
+#define lower_white_val 38.0		// white will reflect the most IR, and will have the highest ADC
 #define upper_black_val 10.0		// black tape will reflect little, and will only be at the low end
 #define lower_tile_val 25.0
-
 
 /***********************************************************************************************/
 
@@ -38,21 +37,19 @@ void PWM_init(double pot_position) {
 /***********************************************************************************************/
 
 
-void PWM_Update(double rightADC, double leftADC, double midADC) {
+void PWM_Update(double rightADC, double leftADC, double midADC, int bcState) { // right and left motor
 	double OC_value_right = 0.0;
 	double OC_value_left = 0.0;
 	double DUTY_CYCLE_RIGHT = 0.0;
 	double DUTY_CYCLE_LEFT = 0.0;
-	int i = 0;
-	char value[8];
 	
 	if(midADC > 500 && leftADC > 250 && rightADC > 300) {
 		return;
 	}
 	else{
 		if(midADC < 350){
-			leftADC=550;
-			rightADC=600;	
+			leftADC=600;	
+			rightADC=650;	
 		}
 		else{	
 			if(leftADC<=200){
@@ -65,12 +62,13 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 		
 		// Need to check if left is actually left or if left is right
 	
-		DUTY_CYCLE_LEFT =0.35+0.65*(leftADC-150) / 511.5;
-		DUTY_CYCLE_RIGHT =0.4+0.6*(rightADC-200) / 511.5;
-	
-//		DUTY_CYCLE_LEFT =1.0;
-//		DUTY_CYCLE_RIGHT =1.0;
+		DUTY_CYCLE_LEFT =0.30+0.65*(leftADC-100) / 511.5;
+		DUTY_CYCLE_RIGHT =0.35+0.6*(rightADC-150) / 511.5;
 		
+//		if(bcState>=0){
+//			DUTY_CYCLE_LEFT =0.15+0.65*(leftADC-150) / 511.5;
+//			DUTY_CYCLE_RIGHT =0.2+0.6*(rightADC-200) / 511.5;
+//		}	
 		OC_value_right = DUTY_CYCLE_RIGHT * (PR_VALUE);		// set output compare value for new position
 		OC1RS = OC_value_right;
 		
@@ -85,8 +83,6 @@ void PWM_Update(double rightADC, double leftADC, double midADC) {
 
 void barCode_Scan(double barcode_val, int *code_counter, double *min_val, double *max_val) {
 	
-	int i = 0;
-	char value[8];
 	
 	switch (*code_counter) {
 
@@ -163,7 +159,7 @@ void barCode_Scan(double barcode_val, int *code_counter, double *min_val, double
 				*max_val = 0.0;
 			break;
 	}
-	
+
 	return;
 }
 
