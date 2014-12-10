@@ -45,9 +45,9 @@ file_003=no
 file_004=no
 file_005=no
 [FILE_INFO]
-file_000=Lab3.c
-file_001=lcd.c
-file_002=RobotMove.c
+file_000=lcd.c
+file_001=RobotMove.c
+file_002=Final.c
 file_003=C:\Program Files (x86)\Microchip\xc16\v1.22\support\PIC24F\h\p24FJ64GA002.h
 file_004=lcd.h
 file_005=RobotMove.h

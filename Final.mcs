@@ -2,19 +2,6 @@
 MagicCookie={0b13fe8c-dfe0-40eb-8900-6712719559a7}
 Version=1.0
 [File000]
-Location=D:\Users\Nico\Documents\UA\5th Semester\ECE 372\Final Project\Lab3.o
-Folder=Intermediary
-DeviceName=PIC24FJ64GA002
-LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
-LanguageToolID={B1442D91-FF1F-4E60-9714-C39C1BA9DB62}
-LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-gcc.exe
-PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
-SOLK=<src>|Lab3.c|lcd.c|RobotMove.c||<obj>||<lib>||<lkr>||
-SuiteArgsString=
-ToolArgsString=-g -Wall
-TraceCmdString=
-DebugOptions=
-[File001]
 Location=D:\Users\Nico\Documents\UA\5th Semester\ECE 372\Final Project\lcd.o
 Folder=Intermediary
 DeviceName=PIC24FJ64GA002
@@ -22,12 +9,12 @@ LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
 LanguageToolID={B1442D91-FF1F-4E60-9714-C39C1BA9DB62}
 LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-gcc.exe
 PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
-SOLK=<src>|Lab3.c|lcd.c|RobotMove.c||<obj>||<lib>||<lkr>||
+SOLK=<src>|lcd.c|RobotMove.c|Final.c||<obj>||<lib>||<lkr>||
 SuiteArgsString=
 ToolArgsString=-g -Wall
 TraceCmdString=
 DebugOptions=
-[File002]
+[File001]
 Location=D:\Users\Nico\Documents\UA\5th Semester\ECE 372\Final Project\RobotMove.o
 Folder=Intermediary
 DeviceName=PIC24FJ64GA002
@@ -35,7 +22,20 @@ LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
 LanguageToolID={B1442D91-FF1F-4E60-9714-C39C1BA9DB62}
 LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-gcc.exe
 PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
-SOLK=<src>|Lab3.c|lcd.c|RobotMove.c||<obj>||<lib>||<lkr>||
+SOLK=<src>|lcd.c|RobotMove.c|Final.c||<obj>||<lib>||<lkr>||
+SuiteArgsString=
+ToolArgsString=-g -Wall
+TraceCmdString=
+DebugOptions=
+[File002]
+Location=D:\Users\Nico\Documents\UA\5th Semester\ECE 372\Final Project\Final.o
+Folder=Intermediary
+DeviceName=PIC24FJ64GA002
+LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
+LanguageToolID={B1442D91-FF1F-4E60-9714-C39C1BA9DB62}
+LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-gcc.exe
+PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
+SOLK=<src>|lcd.c|RobotMove.c|Final.c||<obj>||<lib>||<lkr>||
 SuiteArgsString=
 ToolArgsString=-g -Wall
 TraceCmdString=
@@ -48,7 +48,7 @@ LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
 LanguageToolID={6836D8CA-42BB-48FB-9E77-3F0AA8005073}
 LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-ld.exe
 PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
-SOLK=<src>|Lab3.c|lcd.c|RobotMove.c||<obj>||<lib>||<lkr>||
+SOLK=<src>|lcd.c|RobotMove.c|Final.c||<obj>||<lib>||<lkr>||
 SuiteArgsString=
 ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
 TraceCmdString=
@@ -61,7 +61,7 @@ LanguageToolSuiteID={9BCCB495-CD65-480A-BA76-63D8E78B117F}
 LanguageToolID={6836D8CA-42BB-48FB-9E77-3F0AA8005073}
 LanguageToolLocation=C:\Program Files (x86)\Microchip\xc16\v1.22\bin\xc16-ld.exe
 PPAD=$(BINDIR)||$(TMPDIR)||$(AINDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\src\libm||$(INCDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\inc||$(LIBDIR)|C:\Program Files (x86)\Microchip\xc16\v1.21\lib||$(LKRDIR)||
-SOLK=<src>|Lab3.c|lcd.c|RobotMove.c||<obj>||<lib>||<lkr>||
+SOLK=<src>|lcd.c|RobotMove.c|Final.c||<obj>||<lib>||<lkr>||
 SuiteArgsString=
 ToolArgsString=-o"$(BINDIR_)$(TARGETBASE).$(TARGETSUFFIX)" -Map="$(BINDIR_)$(TARGETBASE).map" --report-mem
 TraceCmdString=
